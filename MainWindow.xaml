@@ -1,0 +1,80 @@
+<Window x:Class="MicroRadarCompanion.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MicroRadarCompanion"
+        mc:Ignorable="d"
+        Title="Micro Radar Companion" Height="660" Width="600">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Connection -->
+        <GroupBox Grid.Row="0" Header="Device connection" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" Margin="8">
+                <ComboBox x:Name="PortComboBox" Width="140" Margin="0,0,8,0"/>
+                <Button Content="Refresh" Width="70" Margin="0,0,8,0" Click="RefreshPorts_Click"/>
+                <Button x:Name="ConnectButton" Content="Connect" Width="90" Click="Connect_Click"/>
+                <TextBlock x:Name="StatusText" Text="Not connected" VerticalAlignment="Center" Margin="16,0,0,0"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Location / range -->
+        <GroupBox Grid.Row="1" Header="Location &amp; range" Margin="0,0,0,12">
+            <StackPanel Margin="8">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Latitude:" Width="70" VerticalAlignment="Center"/>
+                    <TextBox x:Name="LatitudeBox" Width="110" Margin="0,0,16,0"/>
+                    <TextBlock Text="Longitude:" Width="70" VerticalAlignment="Center"/>
+                    <TextBox x:Name="LongitudeBox" Width="110"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Radius (km):" Width="90" VerticalAlignment="Center"/>
+                    <TextBox x:Name="RadiusBox" Width="90"/>
+                </StackPanel>
+                <Button x:Name="ApplyLocationButton" Content="Apply &amp; Regenerate Coastline" HorizontalAlignment="Left"
+                        Click="ApplyLocation_Click"/>
+                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="Gray" FontSize="11"
+                           Text="Fetches real coastline data for the new range from OpenStreetMap, pushes it to the device, then restarts to apply. Can take anywhere from a few seconds to about a minute depending on range and coastline density."/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Colors -->
+        <GroupBox Grid.Row="2" Header="Colors" Margin="0,0,0,12">
+            <StackPanel Margin="8">
+                <ItemsControl x:Name="ColorsList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="190"/>
+                                    <ColumnDefinition Width="34"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="45"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Label}" VerticalAlignment="Center"/>
+                                <Rectangle Grid.Column="1" Width="24" Height="18" Stroke="Gray" StrokeThickness="1"
+                                           Fill="{Binding Brush}"/>
+                                <Button Grid.Column="2" Content="Change..." Tag="{Binding}" Click="ChangeColor_Click"/>
+                                <TextBox Grid.Column="3" Margin="6,0,4,0" MaxLength="6" CharacterCasing="Upper"
+                                         VerticalContentAlignment="Center"
+                                         Text="{Binding HexInput, UpdateSourceTrigger=PropertyChanged}"
+                                         Tag="{Binding}" KeyDown="HexInput_KeyDown"/>
+                                <Button Grid.Column="4" Content="Set" Tag="{Binding}" Click="SetHexColor_Click"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </GroupBox>
+
+        <TextBlock Grid.Row="3" x:Name="LogText" TextWrapping="Wrap" Foreground="Gray" FontSize="11" VerticalAlignment="Bottom"/>
+    </Grid>
+</Window>
