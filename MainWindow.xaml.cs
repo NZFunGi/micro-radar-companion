@@ -64,6 +64,16 @@ public partial class MainWindow : Window
             LongitudeBox.Text = config.Longitude.ToString(CultureInfo.InvariantCulture);
             RadiusBox.Text = (config.Radius * KmPerDegree).ToString("F1", CultureInfo.InvariantCulture);
 
+            OpenskyIdBox.Text = config.OpenskyId;
+            // Already masked with '*' by the device if a secret is set (see
+            // DeviceConfig.OpenskySecret) - left untouched, this round-trips
+            // straight back into SET_OPENSKY_AUTH as "keep the existing secret".
+            OpenskySecretBox.Text = config.OpenskySecret;
+            ScanlineCheckBox.IsChecked = config.Toggles.Scanline;
+            InfotextCheckBox.IsChecked = config.Toggles.Infotext;
+            TriangleCheckBox.IsChecked = config.Toggles.Triangle;
+            CoastlineCheckBox.IsChecked = config.Toggles.Coastline;
+
             colors.Clear();
             foreach (var (key, label) in ColorKeys.All)
             {
@@ -219,6 +229,97 @@ public partial class MainWindow : Window
         finally
         {
             ApplyLocationButton.IsEnabled = true;
+        }
+    }
+
+    // Opens the map picker seeded with whatever's currently in the
+    // Lat/Lon/Radius boxes (falling back to 0/0/current radius text if
+    // they're not valid numbers yet - e.g. before a first Connect). Purely a
+    // local UI convenience, no serial traffic, so it doesn't require a
+    // connected device the way the other buttons here do.
+    private void PickOnMap_Click(object sender, RoutedEventArgs e)
+    {
+        double.TryParse(LatitudeBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var lat);
+        double.TryParse(LongitudeBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var lon);
+        double.TryParse(RadiusBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var radKm);
+
+        var picker = new MapPickerWindow(lat, lon, radKm) { Owner = this };
+        if (picker.ShowDialog() != true) return;
+
+        LatitudeBox.Text = picker.ResultLat.ToString(CultureInfo.InvariantCulture);
+        LongitudeBox.Text = picker.ResultLon.ToString(CultureInfo.InvariantCulture);
+    }
+
+    // Saves the OpenSky Client ID/Secret and the four display toggles, then
+    // restarts the device. Both only take effect after a restart - the
+    // firmware reads them once at boot (opensky-id/secret decide the daily
+    // request budget in OpenSkyBudget.h; the toggles gate what Draw() does
+    // each frame) - so there's no "apply live" path here the way colors have.
+    private async void ApplyOpenSkyAndToggles_Click(object sender, RoutedEventArgs e)
+    {
+        if (!serial.IsConnected)
+        {
+            Log("Connect to the device first.");
+            return;
+        }
+
+        var confirmed = MessageBox.Show(
+            "This saves the OpenSky credentials and display toggles, then restarts the device to apply them. Continue?",
+            "Save & restart", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (confirmed != MessageBoxResult.Yes) return;
+
+        ApplyOpenSkyButton.IsEnabled = false;
+
+        try
+        {
+            var clientId = OpenskyIdBox.Text.Trim();
+            // May be the masked "****" placeholder GET_CONFIG populated this
+            // box with - SET_OPENSKY_AUTH on the firmware side recognises
+            // that and leaves the stored secret untouched, so sending it
+            // back unedited is safe and does not blank out an existing secret.
+            var clientSecret = OpenskySecretBox.Text.Trim();
+
+            var authReply = await serial.SendCommandAsync($"SET_OPENSKY_AUTH {clientId} {clientSecret}");
+            if (!authReply.StartsWith("OK"))
+            {
+                Log($"Device rejected OpenSky credentials: {authReply}");
+                return;
+            }
+
+            // name must match the preference key SerialCommandManager's
+            // SET_TOGGLE handler expects on the firmware side.
+            var toggles = new (string Name, bool? IsChecked)[]
+            {
+                ("scanline", ScanlineCheckBox.IsChecked),
+                ("infotext", InfotextCheckBox.IsChecked),
+                ("triangle", TriangleCheckBox.IsChecked),
+                ("coastline", CoastlineCheckBox.IsChecked),
+            };
+
+            foreach (var (name, isChecked) in toggles)
+            {
+                var value = isChecked == true ? "true" : "false";
+                var toggleReply = await serial.SendCommandAsync($"SET_TOGGLE {name} {value}");
+                if (!toggleReply.StartsWith("OK"))
+                {
+                    Log($"Device rejected {name} toggle: {toggleReply}");
+                    return;
+                }
+            }
+
+            await serial.SendCommandAsync("RESTART");
+            Log("Applied OpenSky credentials and display toggles - device is restarting.");
+            serial.Disconnect();
+            ConnectButton.Content = "Connect";
+            StatusText.Text = "Not connected (device restarting)";
+        }
+        catch (Exception ex)
+        {
+            Log($"Failed to apply OpenSky/toggle settings: {ex.Message}");
+        }
+        finally
+        {
+            ApplyOpenSkyButton.IsEnabled = true;
         }
     }
 

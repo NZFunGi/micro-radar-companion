@@ -16,8 +16,9 @@
 The Micro Radar device stores its color palette, location, and range in flash, and can be reconfigured live over its USB serial connection without a firmware rebuild. This app is the easiest way to do that:
 
 - **Live color pickers** for the sea, land, radar rings, and each aircraft category (light/large/heavy/rotorcraft/glider/unknown) - changes apply on the device's very next drawn frame, no restart needed. Pick from a native color dialog or type a hex code directly.
-- **Location & range** - edit latitude, longitude, and radius (shown in km).
+- **Location & range** - edit latitude, longitude, and radius (shown in km), or click **Pick on map...** to set latitude/longitude visually on an interactive OpenStreetMap map instead of typing coordinates.
 - **One-click coastline regeneration** - fetches real coastline data from OpenStreetMap for whatever location/range you set, classifies land vs sea, and pushes the result to the device. This is what actually lets you point the radar anywhere in the world and get an accurate coastline overlay, not just the one location baked into the firmware.
+- **OpenSky API credentials & display toggles** - set the Client ID/Secret used for OpenSky requests (this is what unlocks the much larger authenticated request budget - see the main firmware README's FAQ on route info), and flip the radar sweep / aircraft info / directional aircraft / coastline toggles. Applying either restarts the device, since both are only read once at boot.
 
 ## Getting Started
 
@@ -47,7 +48,8 @@ to produce a single-file executable at `bin\Release\net8.0-windows\win-x64\publi
 2. Open the app, pick the correct COM port from the dropdown (use **Refresh** if it doesn't show up right away), and click **Connect**.
 3. Once connected, the app reads the device's current colors, location, and range.
 4. **To change colors**: click **Change...** next to any color to open a picker, or type a 6-digit hex code (e.g. `B0C4D2`) into the box and click **Set** / press Enter.
-5. **To change location or range**: edit the fields and click **Apply & Regenerate Coastline**. This fetches real coastline data for the new location/range from OpenStreetMap, pushes it to the device, then restarts the device to apply everything. Depending on range and coastline complexity, this can take anywhere from a few seconds to about a minute - the log line at the bottom shows progress.
+5. **To change location or range**: edit the fields directly, or click **Pick on map...** to open an interactive map - click anywhere (or drag the marker) to move the pin, the blue circle shows your current range for reference, then click **Use this location** to fill in the Latitude/Longitude fields. Either way, click **Apply & Regenerate Coastline** to actually push the change: this fetches real coastline data for the new location/range from OpenStreetMap, pushes it to the device, then restarts the device to apply everything. Depending on range and coastline complexity, this can take anywhere from a few seconds to about a minute - the log line at the bottom shows progress.
+6. **To set OpenSky credentials or display toggles**: edit the Client ID/Secret and/or the checkboxes in the **OpenSky API & display options** box, then click **Apply & Restart**. The Client Secret box shows asterisks once a secret is already set on the device - leave it as-is to keep that secret, or clear it and type a new one to replace it. This restarts the device to apply the change.
 
 ## FAQ
 
@@ -61,9 +63,14 @@ Click **Refresh** - the device may have been plugged in after the app started. I
 The device resets when a new USB connection opens (same as plugging into any Arduino-family board) and can take a few seconds to finish booting, connect to WiFi, and settle down before it's ready to answer. Just try **Connect** again.
 <br/><br/>
 
-> "Apply & Regenerate Coastline" is stuck on "Fetching coastline data..." for a long time, or fails
+> "Apply & Regenerate Coastline" is stuck on "Fetching coastline data..." for a long time, or fails - e.g. "Failed to apply location/coastline: Response status code does not indicate success: 504 (Gateway Timeout)"
 
-This step calls the public [Overpass API](https://overpass-api.de) (OpenStreetMap's query service), which is a free, best-effort service with no guaranteed uptime or rate limit. If you've made several requests in a short time (testing different locations, for example), it may temporarily return errors or time out. Wait a few minutes and try again.
+This step calls the public [Overpass API](https://overpass-api.de) (OpenStreetMap's query service), which is a free, best-effort service with no guaranteed uptime or rate limit - a `504` means their server (or a gateway in front of it) was briefly overwhelmed, not that anything's wrong with your chosen location or the app itself. This can happen even on your very first attempt for a given location (a dense, complex coastline like a big harbour or bay can just take a while to process), not only when making several requests in a row. Just click **Apply & Regenerate Coastline** again - it usually goes through on the next try.
+<br/><br/>
+
+> The "Pick on map..." window is blank, or says "Map failed to load"
+
+This feature needs the [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) to render the map - it ships with Windows 10/11 by default (it's the same component Edge uses), so this is usually only a problem on an older or heavily stripped-down Windows install. Install the "Evergreen Bootstrapper" from that link and try again. It also needs an internet connection, same as coastline regeneration - the map tiles come from OpenStreetMap.
 <br/><br/>
 
 > How accurate is the generated coastline?
@@ -73,7 +80,7 @@ It's built from real OpenStreetMap coastline data, so it's as accurate as OpenSt
 
 > Do I need an OpenSky account for this app specifically?
 
-No - OpenSky credentials are configured on the device itself (via its own web config page at `http://microradar.local`), not through this app. This app only handles colors, location, range, and coastline data.
+No - an OpenSky account is only needed if you want the much larger authenticated request budget for aircraft position polling and route (`O:`/`D:`) lookups; the radar works fine anonymously, just with a smaller daily quota. If you do have one, its Client ID/Secret can be set either through this app's **OpenSky API & display options** box, or the device's own web config page at `http://microradar.local` - both write to the same place on the device, so use whichever's more convenient.
 <br/><br/>
 
 > Can I run this on macOS or Linux?

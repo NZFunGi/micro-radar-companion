@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MicroRadarCompanion"
         mc:Ignorable="d"
-        Title="Micro Radar Companion" Height="660" Width="600">
+        Title="Micro Radar Companion" Height="820" Width="600">
     <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -35,7 +36,8 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="Radius (km):" Width="90" VerticalAlignment="Center"/>
-                    <TextBox x:Name="RadiusBox" Width="90"/>
+                    <TextBox x:Name="RadiusBox" Width="90" Margin="0,0,16,0"/>
+                    <Button x:Name="PickOnMapButton" Content="Pick on map..." Click="PickOnMap_Click"/>
                 </StackPanel>
                 <Button x:Name="ApplyLocationButton" Content="Apply &amp; Regenerate Coastline" HorizontalAlignment="Left"
                         Click="ApplyLocation_Click"/>
@@ -44,8 +46,32 @@
             </StackPanel>
         </GroupBox>
 
+        <!-- OpenSky API & display options -->
+        <GroupBox Grid.Row="2" Header="OpenSky API &amp; display options" Margin="0,0,0,12">
+            <StackPanel Margin="8">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Client ID:" Width="90" VerticalAlignment="Center"/>
+                    <TextBox x:Name="OpenskyIdBox" Width="220"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Client secret:" Width="90" VerticalAlignment="Center"/>
+                    <TextBox x:Name="OpenskySecretBox" Width="220"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <CheckBox x:Name="ScanlineCheckBox" Content="Radar sweep" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                    <CheckBox x:Name="InfotextCheckBox" Content="Aircraft Info" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                    <CheckBox x:Name="TriangleCheckBox" Content="Directional Aircraft" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                    <CheckBox x:Name="CoastlineCheckBox" Content="Coastline" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button x:Name="ApplyOpenSkyButton" Content="Apply &amp; Restart" HorizontalAlignment="Left"
+                        Click="ApplyOpenSkyAndToggles_Click"/>
+                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="Gray" FontSize="11"
+                           Text="Saves the OpenSky credentials and display toggles, then restarts the device to apply them - both are only read once at boot. The client secret box shows asterisks once a secret is already set on the device; leave it as-is to keep that secret, or clear it and type a new one to change it."/>
+            </StackPanel>
+        </GroupBox>
+
         <!-- Colors -->
-        <GroupBox Grid.Row="2" Header="Colors" Margin="0,0,0,12">
+        <GroupBox Grid.Row="3" Header="Colors" Margin="0,0,0,12">
             <StackPanel Margin="8">
                 <ItemsControl x:Name="ColorsList">
                     <ItemsControl.ItemTemplate>
@@ -75,6 +101,6 @@
             </StackPanel>
         </GroupBox>
 
-        <TextBlock Grid.Row="3" x:Name="LogText" TextWrapping="Wrap" Foreground="Gray" FontSize="11" VerticalAlignment="Bottom"/>
+        <TextBlock Grid.Row="4" x:Name="LogText" TextWrapping="Wrap" Foreground="Gray" FontSize="11" VerticalAlignment="Bottom"/>
     </Grid>
 </Window>
