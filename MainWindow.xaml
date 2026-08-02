@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MicroRadarCompanion"
         mc:Ignorable="d"
-        Title="Micro Radar Companion" Height="820" Width="600">
+        Title="Micro Radar Companion" Height="940" Width="600">
     <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -25,8 +26,26 @@
             </StackPanel>
         </GroupBox>
 
+        <!-- WiFi network -->
+        <GroupBox Grid.Row="1" Header="WiFi network" Margin="0,0,0,12">
+            <StackPanel Margin="8">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Network name:" Width="100" VerticalAlignment="Center"/>
+                    <TextBox x:Name="WifiSsidBox" Width="220"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Password:" Width="100" VerticalAlignment="Center"/>
+                    <PasswordBox x:Name="WifiPasswordBox" Width="220"/>
+                </StackPanel>
+                <Button x:Name="ApplyWifiButton" Content="Apply &amp; Restart" HorizontalAlignment="Left"
+                        Click="ApplyWifi_Click"/>
+                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="Gray" FontSize="11"
+                           Text="Saves new WiFi credentials and restarts the device to apply them. If they're wrong, the device just won't have WiFi until you fix it - reconnect here over USB and try again, which works regardless of WiFi state. The network name field shows whatever the device is currently connected to; leave both fields as-is to leave WiFi untouched."/>
+            </StackPanel>
+        </GroupBox>
+
         <!-- Location / range -->
-        <GroupBox Grid.Row="1" Header="Location &amp; range" Margin="0,0,0,12">
+        <GroupBox Grid.Row="2" Header="Location &amp; range" Margin="0,0,0,12">
             <StackPanel Margin="8">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="Latitude:" Width="70" VerticalAlignment="Center"/>
@@ -47,7 +66,7 @@
         </GroupBox>
 
         <!-- OpenSky API & display options -->
-        <GroupBox Grid.Row="2" Header="OpenSky API &amp; display options" Margin="0,0,0,12">
+        <GroupBox Grid.Row="3" Header="OpenSky API &amp; display options" Margin="0,0,0,12">
             <StackPanel Margin="8">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="Client ID:" Width="90" VerticalAlignment="Center"/>
@@ -71,7 +90,7 @@
         </GroupBox>
 
         <!-- Colors -->
-        <GroupBox Grid.Row="3" Header="Colors" Margin="0,0,0,12">
+        <GroupBox Grid.Row="4" Header="Colors" Margin="0,0,0,12">
             <StackPanel Margin="8">
                 <ItemsControl x:Name="ColorsList">
                     <ItemsControl.ItemTemplate>
@@ -101,6 +120,6 @@
             </StackPanel>
         </GroupBox>
 
-        <TextBlock Grid.Row="4" x:Name="LogText" TextWrapping="Wrap" Foreground="Gray" FontSize="11" VerticalAlignment="Bottom"/>
+        <TextBlock Grid.Row="5" x:Name="LogText" TextWrapping="Wrap" Foreground="Gray" FontSize="11" VerticalAlignment="Bottom"/>
     </Grid>
 </Window>

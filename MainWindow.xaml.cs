@@ -64,6 +64,8 @@ public partial class MainWindow : Window
             LongitudeBox.Text = config.Longitude.ToString(CultureInfo.InvariantCulture);
             RadiusBox.Text = (config.Radius * KmPerDegree).ToString("F1", CultureInfo.InvariantCulture);
 
+            WifiSsidBox.Text = config.WifiSsid;
+
             OpenskyIdBox.Text = config.OpenskyId;
             // Already masked with '*' by the device if a secret is set (see
             // DeviceConfig.OpenskySecret) - left untouched, this round-trips
@@ -248,6 +250,77 @@ public partial class MainWindow : Window
 
         LatitudeBox.Text = picker.ResultLat.ToString(CultureInfo.InvariantCulture);
         LongitudeBox.Text = picker.ResultLon.ToString(CultureInfo.InvariantCulture);
+    }
+
+    // Saves a new WiFi network name/password and restarts the device to
+    // apply it. Unlike every other Apply button here, a mistake in this one
+    // can genuinely drop the device off the network - but it's always
+    // recoverable by reconnecting over USB (which doesn't depend on WiFi at
+    // all) and trying again, as the confirmation dialog below explains.
+    private async void ApplyWifi_Click(object sender, RoutedEventArgs e)
+    {
+        if (!serial.IsConnected)
+        {
+            Log("Connect to the device first.");
+            return;
+        }
+
+        var ssid = WifiSsidBox.Text.Trim();
+        if (ssid.Length == 0)
+        {
+            Log("Enter a network name first - leaving this blank would submit an empty SSID.");
+            return;
+        }
+
+        var confirmed = MessageBox.Show(
+            "This saves the new WiFi network name/password and restarts the device to apply them. " +
+            "If they're wrong, the device just won't have WiFi until you fix it - you can always reconnect here over USB " +
+            "(which doesn't need WiFi) and try again. Continue?",
+            "Save WiFi & restart", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (confirmed != MessageBoxResult.Yes) return;
+
+        ApplyWifiButton.IsEnabled = false;
+
+        try
+        {
+            // Sent as three separate lines rather than one space-delimited
+            // command, since SSIDs/passwords routinely contain spaces - see
+            // SerialCommandManager::HandleWifiDataLine on the firmware side.
+            var beginReply = await serial.SendCommandAsync("SET_WIFI");
+            if (!beginReply.StartsWith("OK"))
+            {
+                Log($"Device rejected SET_WIFI: {beginReply}");
+                return;
+            }
+
+            var ssidReply = await serial.SendCommandAsync(ssid);
+            if (!ssidReply.StartsWith("OK"))
+            {
+                Log($"Device rejected the network name: {ssidReply}");
+                return;
+            }
+
+            var passwordReply = await serial.SendCommandAsync(WifiPasswordBox.Password);
+            if (!passwordReply.StartsWith("OK"))
+            {
+                Log($"Device rejected the password: {passwordReply}");
+                return;
+            }
+
+            await serial.SendCommandAsync("RESTART");
+            Log($"Applied WiFi network \"{ssid}\" - device is restarting.");
+            serial.Disconnect();
+            ConnectButton.Content = "Connect";
+            StatusText.Text = "Not connected (device restarting)";
+        }
+        catch (Exception ex)
+        {
+            Log($"Failed to apply WiFi settings: {ex.Message}");
+        }
+        finally
+        {
+            ApplyWifiButton.IsEnabled = true;
+        }
     }
 
     // Saves the OpenSky Client ID/Secret and the four display toggles, then

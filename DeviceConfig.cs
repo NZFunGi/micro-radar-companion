@@ -31,6 +31,12 @@ public class DeviceConfig
     [JsonPropertyName("openskySecret")]
     public string OpenskySecret { get; set; } = "";
 
+    // The currently-connected network, live from the device's WiFi.SSID() -
+    // not a stored/pending value, and never a password (there's no way to
+    // read one back - SET_WIFI always takes a fresh SSID+password pair).
+    [JsonPropertyName("wifiSsid")]
+    public string WifiSsid { get; set; } = "";
+
     [JsonPropertyName("toggles")]
     public DeviceToggles Toggles { get; set; } = new();
 

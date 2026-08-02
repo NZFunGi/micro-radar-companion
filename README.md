@@ -19,6 +19,7 @@ The Micro Radar device stores its color palette, location, and range in flash, a
 - **Location & range** - edit latitude, longitude, and radius (shown in km), or click **Pick on map...** to set latitude/longitude visually on an interactive OpenStreetMap map instead of typing coordinates.
 - **One-click coastline regeneration** - fetches real coastline data from OpenStreetMap for whatever location/range you set, classifies land vs sea, and pushes the result to the device. This is what actually lets you point the radar anywhere in the world and get an accurate coastline overlay, not just the one location baked into the firmware.
 - **OpenSky API credentials & display toggles** - set the Client ID/Secret used for OpenSky requests (this is what unlocks the much larger authenticated request budget - see the main firmware README's FAQ on route info), and flip the radar sweep / aircraft info / directional aircraft / coastline toggles. Applying either restarts the device, since both are only read once at boot.
+- **WiFi network** - change which network the device connects to, over the same USB cable - no need to rebuild firmware or join the `MicroRadar-Setup` hotspot to switch networks. The device is always reachable over USB to fix a bad network name/password, even if it can't get online at all.
 
 ## Getting Started
 
@@ -50,6 +51,7 @@ to produce a single-file executable at `bin\Release\net8.0-windows\win-x64\publi
 4. **To change colors**: click **Change...** next to any color to open a picker, or type a 6-digit hex code (e.g. `B0C4D2`) into the box and click **Set** / press Enter.
 5. **To change location or range**: edit the fields directly, or click **Pick on map...** to open an interactive map - click anywhere (or drag the marker) to move the pin, the blue circle shows your current range for reference, then click **Use this location** to fill in the Latitude/Longitude fields. Either way, click **Apply & Regenerate Coastline** to actually push the change: this fetches real coastline data for the new location/range from OpenStreetMap, pushes it to the device, then restarts the device to apply everything. Depending on range and coastline complexity, this can take anywhere from a few seconds to about a minute - the log line at the bottom shows progress.
 6. **To set OpenSky credentials or display toggles**: edit the Client ID/Secret and/or the checkboxes in the **OpenSky API & display options** box, then click **Apply & Restart**. The Client Secret box shows asterisks once a secret is already set on the device - leave it as-is to keep that secret, or clear it and type a new one to replace it. This restarts the device to apply the change.
+7. **To change WiFi networks**: enter the new network name and password in the **WiFi network** box, then click **Apply & Restart**. The network name field starts populated with whatever the device is currently connected to. If the new credentials turn out to be wrong, the device just won't have WiFi until fixed - reconnect here over USB (which doesn't need WiFi) and try again.
 
 ## FAQ
 
@@ -76,6 +78,11 @@ This feature needs the [WebView2 Runtime](https://developer.microsoft.com/micros
 > How accurate is the generated coastline?
 
 It's built from real OpenStreetMap coastline data, so it's as accurate as OpenStreetMap is for your area - which for most populated coastlines is very good. The device only has a 60x60 grid to render into regardless of range, so at very large ranges (100s of km) fine detail like small islands or narrow inlets may not show individually.
+<br/><br/>
+
+> I changed WiFi networks and now the device won't reconnect
+
+Double-check the network name and password were typed correctly, then try **Apply & Restart** again under **WiFi network**. This doesn't require the device to have working WiFi - it only needs the USB connection, so you can always fix a bad network name/password this way even if the device is completely offline. If the network itself is out of range or down, the device falls back to broadcasting the `MicroRadar-Setup` hotspot after a while, same as on first boot.
 <br/><br/>
 
 > Do I need an OpenSky account for this app specifically?
